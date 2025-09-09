@@ -1,7 +1,7 @@
 export function buildMatrix(size: number) {
   return Array.from(
     { length: size },
-    () => Array(size).fill(null) as (0 | 1 | null)[],
+    () => Array(size).fill(null) as (0 | 1 | null)[]
   );
 }
 
@@ -22,6 +22,8 @@ export function placeFunctionPatterns(mx: (0 | 1 | null)[][], version: number) {
   finder(0, 0);
   finder(n - 7, 0);
   finder(0, n - 7);
+
+  // Separators around finders
   for (let i = 0; i < 8; i++) {
     if (mx[7][i] === null) mx[7][i] = 0;
     if (mx[i][7] === null) mx[i][7] = 0;
@@ -30,10 +32,14 @@ export function placeFunctionPatterns(mx: (0 | 1 | null)[][], version: number) {
     if (mx[n - 8][i] === null) mx[n - 8][i] = 0;
     if (mx[n - 1 - i][7] === null) mx[n - 1 - i][7] = 0;
   }
+
+  // Timing patterns
   for (let i = 8; i < n - 8; i++) {
     mx[6][i] = i % 2 ? 0 : 1;
     mx[i][6] = i % 2 ? 0 : 1;
   }
+
+  // Alignment patterns
   const centers = alignmentPatternCenters(version, n);
   for (let i = 0; i < centers.length; i++)
     for (let j = 0; j < centers.length; j++) {
@@ -47,7 +53,13 @@ export function placeFunctionPatterns(mx: (0 | 1 | null)[][], version: number) {
         continue;
       placeAlignment(mx, cx, cy);
     }
+
+  // Reserve format-info areas (leave as 0; will be overwritten by writeFormatInfo)
   reserveFormat(mx);
+
+  // Fixed dark module (required by spec)
+  placeDarkModule(mx, version);
+
   if (version >= 7) reserveVersion(mx);
 }
 
@@ -77,23 +89,29 @@ function placeAlignment(mx: (0 | 1 | null)[][], cx: number, cy: number) {
 
 function reserveFormat(mx: (0 | 1 | null)[][]) {
   const n = mx.length;
+  // around (row 8, col 0..8) and (row 0..8, col 8)
   for (let i = 0; i < 9; i++) {
     if (i !== 6) {
-      mx[8][i] = mx[8][i] ?? 0;
-      mx[i][8] = mx[i][8] ?? 0;
+      if (mx[8][i] === null) mx[8][i] = 0;
+      if (mx[i][8] === null) mx[i][8] = 0;
     }
   }
+  // mirrored area: (row 8, col n-8..n-1) and (row n-8..n-1, col 8)
   for (let i = 0; i < 8; i++) {
-    mx[n - 1 - i][8] = mx[n - 1 - i][8] ?? 0;
-    mx[8][n - 1 - i] = mx[8][n - 1 - i] ?? 0;
+    if (mx[n - 1 - i][8] === null) mx[n - 1 - i][8] = 0;
+    if (mx[8][n - 1 - i] === null) mx[8][n - 1 - i] = 0;
   }
-  mx[7][8] = 1;
-  mx[8][8] = 1;
-  mx[8][7] = 1;
 }
 
 function reserveVersion(mx: (0 | 1 | null)[][]) {
-  /* version info for v>=7 not implemented here */
+  /* version info (v>=7) */
+}
+
+function placeDarkModule(mx: (0 | 1 | null)[][], version: number) {
+  const n = mx.length;
+  const row = 8,
+    col = 4 * version + 9;
+  if (col < n) mx[row][col] = 1;
 }
 
 export function placeData(mx: (0 | 1 | null)[][], dataBits: number[]) {

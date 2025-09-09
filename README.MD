@@ -16,3 +16,12 @@ const upi = helpers.upi.buildIntent({ vpa:'prashant@oksbi', amount:990, name:'HE
 const { grid } = encodeJS(upi, { ecc:'M', version:'auto' });
 renderCanvas(document.querySelector('canvas')!, grid, 8, 4);
 ```
+
+## Dual ESM/CJS build
+
+This package emits both ESM (`.mjs`) and CJS (`.cjs`) plus types.
+
+```bash
+npm i
+npm run build
+```

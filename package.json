@@ -4,37 +4,56 @@
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    },
-    "./render": {
-      "types": "./dist/render/index.d.ts",
-      "import": "./dist/render/index.js"
-    },
-    "./wasm": {
-      "types": "./dist/wasm/index.d.ts",
-      "import": "./dist/wasm/index.js"
-    },
-    "./helpers": {
-      "types": "./dist/helpers/index.d.ts",
-      "import": "./dist/helpers/index.js"
-    }
-  },
   "files": [
     "dist",
     "wasm/pkg"
   ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.mjs"
+    },
+    "./render": {
+      "types": "./dist/render/index.d.ts",
+      "import": "./dist/render/index.mjs",
+      "require": "./dist/render/index.cjs"
+    },
+    "./helpers": {
+      "types": "./dist/helpers/index.d.ts",
+      "import": "./dist/helpers/index.mjs",
+      "require": "./dist/helpers/index.cjs"
+    },
+    "./wasm": {
+      "types": "./dist/wasm/index.d.ts",
+      "import": "./dist/wasm/index.mjs",
+      "require": "./dist/wasm/index.cjs"
+    }
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "clean": "rimraf dist || rm -rf dist",
+    "test:int": "http-server ./ -p 4040",
+    "build": "tsup --config tsup.config.ts",
+    "build:rollup": "rollup -c",
     "dev": "vite examples",
-    "prettier": "prettier --write src"
+    "bench": "node --loader ts-node/esm scripts/bench.ts || node scripts/bench.mjs",
+    "prepublishOnly": "npm run clean && npm run typecheck && npm run build && npm run size-check",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "size-check": "node scripts/size-check.mjs"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "http-server": "^14.1.1",
+    "rimraf": "^6.0.1",
+    "rollup": "^4.21.0",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.0.1",
     "typescript": "^5.6.2",
-    "vite": "^5.4.0",
-    "prettier": "^3.6.2"
+    "vite": "^5.4.0"
   }
 }

@@ -1,0 +1,7 @@
+examples/
+wasm/src/
+rollup.config.mjs
+vite.config.ts
+tsconfig.json
+scripts/
+*.map
