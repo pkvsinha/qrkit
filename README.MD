@@ -1,7 +1,18 @@
-# QR Kit
+# @pkvsinha/qrkit (lite demo build)
 
-# Introduction
+TypeScript QR generator with JS core, WASM-ready API, Canvas/SVG renderers, batch API, and helpers (UPI). This archive contains a runnable minimal implementation for v1–v10.
 
-You can use this library to generate multitude of QR code. You can check it here:
+## Dev
+```bash
+npm i
+npm run build
+npx vite examples
+```
 
-https://prashantsinha.com/apps/qr
+## Quick use
+```ts
+import { encodeJS, renderCanvas, helpers } from '@pkvsinha/qrkit';
+const upi = helpers.upi.buildIntent({ vpa:'prashant@oksbi', amount:990, name:'HEYPKV', note:'Invoice INV-1042' });
+const { grid } = encodeJS(upi, { ecc:'M', version:'auto' });
+renderCanvas(document.querySelector('canvas')!, grid, 8, 4);
+```
