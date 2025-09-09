@@ -1,4 +1,4 @@
-import { encodeJS, renderCanvas } from "../dist/index.js";
+import { encodeJS, renderCanvas } from "../dist/esm/index.js";
 const t = document.getElementById("text");
 const c = document.getElementById("canvas");
 function draw() {

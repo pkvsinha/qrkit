@@ -3,5 +3,6 @@ wasm/src/
 rollup.config.mjs
 vite.config.ts
 tsconfig.json
+tsconfig.build-types.json
 scripts/
 *.map
