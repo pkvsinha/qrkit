@@ -108,10 +108,11 @@ function reserveVersion(mx: (0 | 1 | null)[][]) {
 }
 
 function placeDarkModule(mx: (0 | 1 | null)[][], version: number) {
+  // ISO/IEC 18004 uses (row, col). Dark module at (4*V + 9, 8)
   const n = mx.length;
-  const row = 8,
-    col = 4 * version + 9;
-  if (col < n) mx[row][col] = 1;
+  const row = 4 * version + 9,
+    col = 8;
+  if (row < n) mx[row][col] = 1;
 }
 
 export function placeData(mx: (0 | 1 | null)[][], dataBits: number[]) {

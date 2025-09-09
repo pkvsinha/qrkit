@@ -150,3 +150,42 @@ function makeFormatBits(ecc: ECC, mask: number) {
     if ((v >>> i) & 1) v ^= GEN_POLY_FORMAT << (i - 10);
   return ((fmt5 << 10) | v) ^ FORMAT_MASK;
 }
+
+// --- Version info (v >= 7) ---
+const VER_GEN = 0x1f25; // generator polynomial for (18,6) Golay
+export function writeVersionInfo(grid:Uint8Array, size:number, version:number) {
+  if (version < 7) return;
+
+  // 6-bit version + 12-bit EC = 18 bits
+  let vbits = version & 0x3f;     // 6 bits
+  let data = vbits << 12;         // pad right with 12 zeros
+
+  // BCH: divide by generator to get 12 EC bits
+  let rem = data;
+  for (let i = 17; i >= 12; i--) {
+    if ((rem >>> i) & 1) rem ^= VER_GEN << (i - 12);
+  }
+  const full = (data | rem) & 0x3ffff; // 18 bits
+
+  // Place into two blocks:
+  // Bottom-left block: 6 cols wide x 3 rows high above the lower-left finder
+  // Top-right block: 3 cols wide x 6 rows high to the left of the upper-right finder
+  // Bit order per spec tables (LSB = bit 0). See Thonky “Format and Version Information”.
+  // Bottom-left (rows: size-11..size-9, cols: 0..5)
+  let bit = 0;
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 6; c++, bit++) {
+      const y = size - 11 + r;
+      const x = c;
+      grid[y*size + x] = ((full >>> bit) & 1) as 0|1;
+    }
+  }
+  // Top-right (rows: 0..5, cols: size-11..size-9)
+  for (let r = 0; r < 6; r++) {
+    for (let c = 0; c < 3; c++, bit++) {
+      const y = r;
+      const x = size - 11 + c;
+      grid[y*size + x] = ((full >>> bit) & 1) as 0|1;
+    }
+  }
+}

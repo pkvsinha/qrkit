@@ -1,7 +1,7 @@
 import { V, ALNUM_TABLE, MODE_INDICATOR, CHAR_COUNT_BITS } from "./tables";
 import { rsEncode } from "./reedsolomon";
 import { buildMatrix, placeFunctionPatterns, placeData } from "./matrix";
-import { applyBestMask, writeFormatInfo } from "./mask";
+import { applyBestMask, writeFormatInfo, writeVersionInfo } from "./mask";
 import type { EncodeOptions, EncodeResult } from "./types";
 
 const toBits = (n: number, len: number) => {
@@ -54,6 +54,7 @@ export function encode(input: string, opts: EncodeOptions = {}): EncodeResult {
   const placed = placeData(mx, bytesToBits(inter));
   const masked = applyBestMask(mx, placed.maskable);
   writeFormatInfo(masked.grid, info.size, ecc, masked.mask);
+  writeVersionInfo(masked.grid, info.size, version);
   return {
     grid: { size: info.size, data: masked.grid },
     version,
