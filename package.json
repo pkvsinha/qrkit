@@ -5,37 +5,35 @@
   "private": false,
   "type": "module",
   "sideEffects": false,
-  "files": [
-    "dist",
-    "wasm/pkg",
-    "src",
-    "README.md",
-    "LICENSE"
-  ],
+  "files": ["dist", "src", "wasm/pkg", "README.md", "CHANGELOG.md", "LICENSE"],
   "main": "dist/cjs/index.cjs",
   "module": "dist/esm/index.mjs",
-  "types": "dist/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "import": "./dist/esm/index.mjs",
       "require": "./dist/cjs/index.cjs",
+      "source": "./src/index.ts",
       "default": "./dist/esm/index.mjs"
     },
     "./render": {
-      "types": "./dist/render/index.d.ts",
+      "types": "./dist/types/render/index.d.ts",
       "import": "./dist/esm/render/index.mjs",
-      "require": "./dist/cjs/render/index.cjs"
+      "require": "./dist/cjs/render/index.cjs",
+      "source": "./src/render/svg.ts"
     },
     "./helpers": {
-      "types": "./dist/helpers/index.d.ts",
+      "types": "./dist/types/helpers/index.d.ts",
       "import": "./dist/esm/helpers/index.mjs",
-      "require": "./dist/cjs/helpers/index.cjs"
+      "require": "./dist/cjs/helpers/index.cjs",
+      "source": "./src/helpers/index.ts"
     },
     "./wasm": {
-      "types": "./dist/wasm/index.d.ts",
+      "types": "./dist/types/wasm/index.d.ts",
       "import": "./dist/esm/wasm/index.mjs",
-      "require": "./dist/cjs/wasm/index.cjs"
+      "require": "./dist/cjs/wasm/index.cjs",
+      "source": "./src/wasm/index.ts"
     }
   },
   "scripts": {

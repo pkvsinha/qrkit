@@ -7,7 +7,7 @@ const entry = {
   'wasm/index': 'src/wasm/index.ts',
 };
 
-// We generate types separately via tsc, so dts:false here.
+// JS builds only; types via TSC into dist/types
 export default defineConfig([
   {
     entry,
@@ -19,7 +19,8 @@ export default defineConfig([
     splitting: false,
     shims: false,
     target: 'es2020',
-    minify: false
+    minify: false,
+    esbuildOptions(o) { (o as any).sourcesContent = true; }
   },
   {
     entry,
@@ -31,6 +32,7 @@ export default defineConfig([
     splitting: false,
     shims: false,
     target: 'es2020',
-    minify: false
+    minify: false,
+    esbuildOptions(o) { (o as any).sourcesContent = true; }
   }
 ]);
