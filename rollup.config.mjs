@@ -26,4 +26,16 @@ export default [
     plugins: [resolve({ extensions: [".ts", ".js"] }), commonjs()],
     treeshake: true,
   },
+  {
+    input: "src/index.ts",
+    output: {
+      file: "dist/umd/symbol-codec.umd.min.js",
+      format: "umd",
+      name: "SymbolCodec",
+      sourcemap: true,
+      exports: "named",
+    },
+    plugins: [resolve({ extensions: [".ts", ".js"] }), commonjs(), terser()],
+    treeshake: true,
+  },
 ];
