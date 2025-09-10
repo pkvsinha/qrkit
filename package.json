@@ -5,7 +5,14 @@
   "private": false,
   "type": "module",
   "sideEffects": false,
-  "files": ["dist", "src", "wasm/pkg", "README.md", "CHANGELOG.md", "LICENSE"],
+  "files": [
+    "dist",
+    "src",
+    "wasm/pkg",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
   "main": "dist/cjs/index.cjs",
   "module": "dist/esm/index.mjs",
   "types": "dist/types/index.d.ts",
@@ -38,7 +45,8 @@
   },
   "scripts": {
     "clean": "rimraf dist || rm -rf dist",
-    "test:int": "http-server ./ -p 4040",
+    "examples": "vite exmaples",
+    "test:int": "http-server ./ -p 7410",
     "build": "npm run clean && tsup --config tsup.config.ts && npm run types",
     "types": "tsc -p tsconfig.build-types.json",
     "build:rollup": "rollup -c",
@@ -57,5 +65,8 @@
     "tsup": "^8.0.1",
     "typescript": "^5.6.2",
     "vite": "^5.4.0"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4"
   }
 }

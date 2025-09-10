@@ -89,18 +89,44 @@ function placeAlignment(mx: (0 | 1 | null)[][], cx: number, cy: number) {
 
 function reserveFormat(mx: (0 | 1 | null)[][]) {
   const n = mx.length;
-  // around (row 8, col 0..8) and (row 0..8, col 8)
-  for (let i = 0; i < 9; i++) {
-    if (i !== 6) {
-      if (mx[8][i] === null) mx[8][i] = 0;
-      if (mx[i][8] === null) mx[i][8] = 0;
-    }
-  }
-  // mirrored area: (row 8, col n-8..n-1) and (row n-8..n-1, col 8)
-  for (let i = 0; i < 8; i++) {
-    if (mx[n - 1 - i][8] === null) mx[n - 1 - i][8] = 0;
-    if (mx[8][n - 1 - i] === null) mx[8][n - 1 - i] = 0;
-  }
+
+  const A: Array<[number, number]> = [
+    [8, 0],
+    [8, 1],
+    [8, 2],
+    [8, 3],
+    [8, 4],
+    [8, 5],
+    [8, 7],
+    [8, 8],
+    [7, 8],
+    [5, 8],
+    [4, 8],
+    [3, 8],
+    [2, 8],
+    [1, 8],
+    [0, 8],
+  ];
+
+  const B: Array<[number, number]> = [
+    [n - 1, 8],
+    [n - 2, 8],
+    [n - 3, 8],
+    [n - 4, 8],
+    [n - 5, 8],
+    [n - 6, 8],
+    [n - 7, 8],
+    [8, n - 8],
+    [8, n - 7],
+    [8, n - 6],
+    [8, n - 5],
+    [8, n - 4],
+    [8, n - 3],
+    [8, n - 2],
+    [8, n - 1],
+  ];
+
+  for (const [r, c] of [...A, ...B]) if (mx[r][c] === null) mx[r][c] = 0;
 }
 
 function reserveVersion(mx: (0 | 1 | null)[][]) {
@@ -118,34 +144,37 @@ function placeDarkModule(mx: (0 | 1 | null)[][], version: number) {
 export function placeData(mx: (0 | 1 | null)[][], dataBits: number[]) {
   const n = mx.length;
   const maskable: boolean[] = [];
-  let row = n - 1,
-    col = n - 1,
-    dir = -1,
-    iBit = 0;
-  const set = (y: number, x: number, val: 0 | 1) => {
-    mx[y][x] = val;
-    maskable[y * n + x] = true;
+  let bitIndex = 0;
+  let dir = -1; // -1 = up, +1 = down
+  let col = n - 1;
+
+  const set = (r: number, c: number, val: 0 | 1) => {
+    mx[r][c] = val;
+    maskable[r * n + c] = true;
   };
+
   while (col > 0) {
-    if (col === 6) col--;
-    for (let k = 0; k < 2; k++) {
-      const c = col - k;
-      let r = row;
-      while (r >= 0 && r < n) {
-        if (mx[r][c] === null) {
-          const b = (dataBits[iBit++] || 0) as 0 | 1;
-          set(r, c, b);
+    if (col === 6) col--; // skip timing col
+
+    for (let i = 0; i < n; i++) {
+      const row = dir === -1 ? n - 1 - i : i;
+      for (let c = 0; c < 2; c++) {
+        const cc = col - c;
+        if (mx[row][cc] === null) {
+          const bit = (dataBits[bitIndex++] || 0) as 0 | 1;
+          set(row, cc, bit);
         }
-        r += dir;
       }
     }
-    dir *= -1;
-    row = dir === -1 ? n - 1 : 0;
+
     col -= 2;
+    dir = -dir; // flip direction each 2-column block
   }
+
   const flat = new Uint8Array(n * n);
   let t = 0;
   for (let y = 0; y < n; y++)
     for (let x = 0; x < n; x++, t++) flat[t] = (mx[y][x] ?? 0) as 0 | 1;
+
   return { grid: flat, maskable };
 }

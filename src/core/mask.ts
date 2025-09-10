@@ -120,35 +120,43 @@ function patternPenalty(g: Uint8Array, n: number) {
   return s;
 }
 
-const GEN_POLY_FORMAT = 0b10100110111;
-const FORMAT_MASK = 0b101010000010010;
-const ECC2 = { L: 0b01, M: 0b00, Q: 0b11, H: 0b10 } as const;
+const GEN_POLY_FORMAT = 0b10100110111;      // 0x537
+const FORMAT_MASK     = 0b101010000010010;  // 0x5412
+const EC2 = { L: 0b01, M: 0b00, Q: 0b11, H: 0b10 } as const;
 
-export function writeFormatInfo(
-  grid: Uint8Array,
-  size: number,
-  ecc: ECC,
-  mask: number,
-) {
-  const fmt = makeFormatBits(ecc, mask);
-  const set = (y: number, x: number, val: number) => {
-    grid[y * size + x] = val as 0 | 1;
-  };
-  for (let i = 0; i < 6; i++) set(i, 8, (fmt >>> i) & 1);
-  set(7, 8, (fmt >>> 6) & 1);
-  set(8, 8, (fmt >>> 7) & 1);
-  set(8, 7, (fmt >>> 8) & 1);
-  for (let i = 9; i < 15; i++) set(8, 14 - i, (fmt >>> i) & 1);
-  for (let i = 0; i < 8; i++) set(8, size - 1 - i, (fmt >>> i) & 1);
-  for (let i = 8; i < 15; i++) set(size - 15 + i, 8, (fmt >>> i) & 1);
+function makeFormatBits(ecc:'L'|'M'|'Q'|'H', mask:number){
+  const f5 = ((EC2[ecc] & 0b11) << 3) | (mask & 0b111); // 5 bits
+  let v = f5 << 10;
+  for (let i = 14; i >= 10; i--) if ((v >>> i) & 1) v ^= GEN_POLY_FORMAT << (i - 10);
+  return ((f5 << 10) | v) ^ FORMAT_MASK;               // 15 bits
 }
 
-function makeFormatBits(ecc: ECC, mask: number) {
-  const fmt5 = ((ECC2[ecc] & 0b11) << 3) | (mask & 0b111);
-  let v = fmt5 << 10;
-  for (let i = 14; i >= 10; i--)
-    if ((v >>> i) & 1) v ^= GEN_POLY_FORMAT << (i - 10);
-  return ((fmt5 << 10) | v) ^ FORMAT_MASK;
+export function writeFormatInfo(grid: Uint8Array, size: number, ecc:'L'|'M'|'Q'|'H', mask:number){
+  const fmt = makeFormatBits(ecc, mask);
+
+  // Copy A (around top-left finder) — 15 cells
+  const A: Array<[number,number]> = [
+    // row 8, col 0..5  (6)
+    [8,0],[8,1],[8,2],[8,3],[8,4],[8,5],
+    // row 8, col 7; row 8, col 8; row 7, col 8  (3)
+    [8,7],[8,8],[7,8],
+    // row 5..0, col 8  (6)
+    [5,8],[4,8],[3,8],[2,8],[1,8],[0,8],
+  ];
+
+  // Copy B (bottom-left column + top-right row) — 15 cells
+  // Column segment: rows size-1..size-7 at col 8 (7)
+  // Row segment:    row 8 at cols size-8..size-1 (8)  <- **eight** positions here
+  const B: Array<[number,number]> = [
+    [size-1,8],[size-2,8],[size-3,8],[size-4,8],[size-5,8],[size-6,8],[size-7,8],
+    [8,size-8],[8,size-7],[8,size-6],[8,size-5],[8,size-4],[8,size-3],[8,size-2],[8,size-1],
+  ];
+
+  for (let i = 0; i < 15; i++){
+    const bit = (fmt >>> i) & 1 as 0|1;
+    const [ar, ac] = A[i]; grid[ar*size + ac] = bit;
+    const [br, bc] = B[i]; grid[br*size + bc] = bit;
+  }
 }
 
 // --- Version info (v >= 7) ---

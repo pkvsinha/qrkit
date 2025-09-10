@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>QR Diff — qrkit vs reference</title>
+    <style>
+      body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial; padding: 16px; }
+      .row { display: grid; grid-template-columns: 370px 370px 370px; gap: 16px; align-items: start; }
+      canvas { border: 1px solid #ddd; image-rendering: pixelated; }
+      .small { opacity: .7; font-size: 12px; }
+      input, select, textarea { width: 100%; padding: 8px; margin-bottom: 8px; font-family: inherit; }
+      .ok { color: #0a0; }
+      .bad { color: #a00; font-weight: 600; }
+      .card { padding: 12px; border: 1px solid #eee; border-radius: 8px; }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    </style>
+  </head>
+  <body>
+    <h2>QR Matrix Diff (qrkit vs reference)</h2>
+    <div class="card">
+      <label>Payload</label>
+      <textarea id="payload" rows="3">upi://pay?pa=prashant@oksbi&amp;pn=HEYPKV&amp;am=990&amp;cu=INR&amp;tn=Invoice%20INV-1042</textarea>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr; gap:12px;">
+        <div>
+          <label>ECC</label>
+          <select id="ecc">
+            <option value="M" selected>M</option>
+            <option value="L">L</option>
+            <option value="Q">Q</option>
+            <option value="H">H</option>
+          </select>
+        </div>
+        <div>
+          <label>Version</label>
+          <select id="version">
+            <option value="auto" selected>auto</option>
+            <!-- you can force versions for debugging -->
+            <option>1</option><option>2</option><option>3</option><option>4</option>
+            <option>5</option><option>6</option><option>7</option><option>8</option>
+            <option>9</option><option>10</option>
+          </select>
+        </div>
+        <div>
+          <label>Scale</label>
+          <input id="scale" type="number" min="2" value="6" />
+        </div>
+      </div>
+      <button id="run">Generate & Diff</button>
+      <div id="meta" class="small mono"></div>
+    </div>
+
+    <div class="row" style="margin-top:16px;">
+      <div>
+        <h3>qrkit</h3>
+        <canvas id="cvA" width="360" height="360"></canvas>
+        <div class="small mono" id="infoA"></div>
+      </div>
+      <div>
+        <h3>reference</h3>
+        <canvas id="cvB" width="360" height="360"></canvas>
+        <div class="small mono" id="infoB"></div>
+      </div>
+      <div>
+        <h3>diff</h3>
+        <canvas id="cvD" width="360" height="360"></canvas>
+        <div class="small mono">green = match (dark), light gray = match (light), <span class="bad">red = mismatch</span></div>
+      </div>
+    </div>
+
+    <script type="module" src="./diff.js"></script>
+  </body>
+</html>
