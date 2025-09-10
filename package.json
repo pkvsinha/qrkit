@@ -53,8 +53,8 @@
     "types": "tsc -p tsconfig.build-types.json",
     "build:rollup": "rollup -c",
     "dev": "vite examples",
-    "bench": "node --loader ts-node/esm scripts/bench.ts || node scripts/bench.mjs",
-    "size-check": "node scripts/size-check.mjs",
+    "bench": "node --loader ts-node/esm scripts/bench.ts || node scripts/bench.js",
+    "size-check": "node scripts/size-check.js",
     "prepublishOnly": "npm run clean && npm run types && npm run build && npm run size-check"
   },
   "devDependencies": {
