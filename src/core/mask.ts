@@ -11,12 +11,10 @@ export function applyBestMask(mx: (0 | 1 | null)[][], maskable: boolean[]) {
     for (let y = 0; y < n; y++)
       for (let x = 0; x < n; x++) {
         const idx = y * n + x;
-        if (maskable[idx]) {
-          if (shouldFlip(m, y, x)) g[idx] ^= 1;
-        }
+        if (maskable[idx] && shouldFlip(m, y, x)) g[idx] ^= 1;
       }
     const score = penalty(g, n);
-    if (score < bestScore) {
+    if (score < bestScore || (score === bestScore && m < bestMask)) {
       bestScore = score;
       bestMask = m;
       bestGrid = g;
@@ -24,7 +22,6 @@ export function applyBestMask(mx: (0 | 1 | null)[][], maskable: boolean[]) {
   }
   return { grid: bestGrid, mask: bestMask };
 }
-
 function flatten(mx: (0 | 1 | null)[][]) {
   const n = mx.length;
   const out = new Uint8Array(n * n);
@@ -92,81 +89,102 @@ function linePenalty(arr: Uint8Array) {
   if (run >= 5) s += 3 + (run - 5);
   return s;
 }
+
 function patternPenalty(g: Uint8Array, n: number) {
-  const patt = [1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0];
+  const pattF = [1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0];
+  const pattR = [0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1];
   let s = 0;
-  for (let y = 0; y < n; y++)
-    for (let x = 0; x <= n - patt.length; x++) {
-      let ok = true;
-      for (let k = 0; k < patt.length; k++) {
-        if (g[y * n + x + k] !== patt[k]) {
-          ok = false;
-          break;
-        }
+
+  // rows
+  for (let y = 0; y < n; y++) {
+    for (let x = 0; x <= n - pattF.length; x++) {
+      let okF = true,
+        okR = true;
+      for (let k = 0; k < pattF.length; k++) {
+        const v = g[y * n + x + k];
+        if (v !== pattF[k]) okF = false;
+        if (v !== pattR[k]) okR = false;
+        if (!okF && !okR) break;
       }
-      if (ok) s += 40;
+      if (okF || okR) s += 40;
     }
-  for (let x = 0; x < n; x++)
-    for (let y = 0; y <= n - patt.length; y++) {
-      let ok = true;
-      for (let k = 0; k < patt.length; k++) {
-        if (g[(y + k) * n + x] !== patt[k]) {
-          ok = false;
-          break;
-        }
+  }
+  // cols
+  for (let x = 0; x < n; x++) {
+    for (let y = 0; y <= n - pattF.length; y++) {
+      let okF = true,
+        okR = true;
+      for (let k = 0; k < pattF.length; k++) {
+        const v = g[(y + k) * n + x];
+        if (v !== pattF[k]) okF = false;
+        if (v !== pattR[k]) okR = false;
+        if (!okF && !okR) break;
       }
-      if (ok) s += 40;
+      if (okF || okR) s += 40;
     }
+  }
   return s;
 }
 
-const GEN_POLY_FORMAT = 0b10100110111;      // 0x537
-const FORMAT_MASK     = 0b101010000010010;  // 0x5412
+// ---- Format info (BCH(15,5)) ----
+const GEN_POLY_FORMAT = 0b10100110111; // 0x537
+const FORMAT_MASK = 0b101010000010010; // 0x5412
 const EC2 = { L: 0b01, M: 0b00, Q: 0b11, H: 0b10 } as const;
 
-function makeFormatBits(ecc:'L'|'M'|'Q'|'H', mask:number){
+function makeFormatBits(ecc: "L" | "M" | "Q" | "H", mask: number) {
   const f5 = ((EC2[ecc] & 0b11) << 3) | (mask & 0b111); // 5 bits
   let v = f5 << 10;
-  for (let i = 14; i >= 10; i--) if ((v >>> i) & 1) v ^= GEN_POLY_FORMAT << (i - 10);
-  return ((f5 << 10) | v) ^ FORMAT_MASK;               // 15 bits
+  for (let i = 14; i >= 10; i--)
+    if ((v >>> i) & 1) v ^= GEN_POLY_FORMAT << (i - 10);
+  return ((f5 << 10) | v) ^ FORMAT_MASK; // 15 bits (b14..b0)
 }
 
-export function writeFormatInfo(grid: Uint8Array, size: number, ecc:'L'|'M'|'Q'|'H', mask:number){
-  const fmt = makeFormatBits(ecc, mask);
+/**
+ * Write both copies of the 15 format bits in the spec order.
+ * IMPORTANT: call this AFTER masking the data modules.
+ */
+export function writeFormatInfo(
+  grid: Uint8Array,
+  size: number,
+  ecc: "L" | "M" | "Q" | "H",
+  mask: number
+) {
+  const fmt = makeFormatBits(ecc, mask); // b14..b0
 
-  // Copy A (around top-left finder) — 15 cells
-  const A: Array<[number,number]> = [
-    // row 8, col 0..5  (6)
-    [8,0],[8,1],[8,2],[8,3],[8,4],[8,5],
-    // row 8, col 7; row 8, col 8; row 7, col 8  (3)
-    [8,7],[8,8],[7,8],
-    // row 5..0, col 8  (6)
-    [5,8],[4,8],[3,8],[2,8],[1,8],[0,8],
-  ];
+  // Copy #1 around top-left finder
+  // bits b0..b5: (row 0..5, col 8)
+  for (let i = 0; i <= 5; i++) grid[i * size + 8] = ((fmt >>> i) & 1) as 0 | 1;
+  // b6: (row 7, col 8)
+  grid[7 * size + 8] = ((fmt >>> 6) & 1) as 0 | 1;
+  // b7: (row 8, col 8)
+  grid[8 * size + 8] = ((fmt >>> 7) & 1) as 0 | 1;
+  // b8: (row 8, col 7)
+  grid[8 * size + 7] = ((fmt >>> 8) & 1) as 0 | 1;
+  // b9..b14: (row 8, col 14..9)  => map i=9..14 to col = 14 - i
+  for (let i = 9; i <= 14; i++)
+    grid[8 * size + (14 - i)] = ((fmt >>> i) & 1) as 0 | 1;
 
-  // Copy B (bottom-left column + top-right row) — 15 cells
-  // Column segment: rows size-1..size-7 at col 8 (7)
-  // Row segment:    row 8 at cols size-8..size-1 (8)  <- **eight** positions here
-  const B: Array<[number,number]> = [
-    [size-1,8],[size-2,8],[size-3,8],[size-4,8],[size-5,8],[size-6,8],[size-7,8],
-    [8,size-8],[8,size-7],[8,size-6],[8,size-5],[8,size-4],[8,size-3],[8,size-2],[8,size-1],
-  ];
-
-  for (let i = 0; i < 15; i++){
-    const bit = (fmt >>> i) & 1 as 0|1;
-    const [ar, ac] = A[i]; grid[ar*size + ac] = bit;
-    const [br, bc] = B[i]; grid[br*size + bc] = bit;
-  }
+  // Copy #2 (the other L-shape)
+  // b0..b7: (row size-1..size-8, col 8)
+  for (let i = 0; i <= 7; i++)
+    grid[(size - 1 - i) * size + 8] = ((fmt >>> i) & 1) as 0 | 1;
+  // b8..b14: (row 8, col size-8..size-1)
+  for (let i = 8; i <= 14; i++)
+    grid[8 * size + (size - 8 + (i - 8))] = ((fmt >>> i) & 1) as 0 | 1;
 }
 
 // --- Version info (v >= 7) ---
 const VER_GEN = 0x1f25; // generator polynomial for (18,6) Golay
-export function writeVersionInfo(grid:Uint8Array, size:number, version:number) {
+export function writeVersionInfo(
+  grid: Uint8Array,
+  size: number,
+  version: number
+) {
   if (version < 7) return;
 
   // 6-bit version + 12-bit EC = 18 bits
-  let vbits = version & 0x3f;     // 6 bits
-  let data = vbits << 12;         // pad right with 12 zeros
+  let vbits = version & 0x3f; // 6 bits
+  let data = vbits << 12; // pad right with 12 zeros
 
   // BCH: divide by generator to get 12 EC bits
   let rem = data;
@@ -185,7 +203,7 @@ export function writeVersionInfo(grid:Uint8Array, size:number, version:number) {
     for (let c = 0; c < 6; c++, bit++) {
       const y = size - 11 + r;
       const x = c;
-      grid[y*size + x] = ((full >>> bit) & 1) as 0|1;
+      grid[y * size + x] = ((full >>> bit) & 1) as 0 | 1;
     }
   }
   // Top-right (rows: 0..5, cols: size-11..size-9)
@@ -193,7 +211,7 @@ export function writeVersionInfo(grid:Uint8Array, size:number, version:number) {
     for (let c = 0; c < 3; c++, bit++) {
       const y = r;
       const x = size - 11 + c;
-      grid[y*size + x] = ((full >>> bit) & 1) as 0|1;
+      grid[y * size + x] = ((full >>> bit) & 1) as 0 | 1;
     }
   }
 }

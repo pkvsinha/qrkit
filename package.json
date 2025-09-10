@@ -46,7 +46,7 @@
   "scripts": {
     "clean": "rimraf dist || rm -rf dist",
     "examples": "vite exmaples",
-    "test:int": "http-server ./ -p 7410",
+    "test:int": "http-server ./ -p 6854",
     "build": "npm run clean && tsup --config tsup.config.ts && npm run types",
     "types": "tsc -p tsconfig.build-types.json",
     "build:rollup": "rollup -c",
