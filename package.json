@@ -1,6 +1,6 @@
 {
-  "name": "@pkvsinha/qrkit",
-  "version": "0.1.0",
+  "name": "@pkvsinha/symbol-codec",
+  "version": "0.0.1",
   "license": "MIT",
   "private": false,
   "type": "module",
@@ -46,7 +46,7 @@
   "scripts": {
     "clean": "rimraf dist || rm -rf dist",
     "examples": "vite exmaples",
-    "test:int": "http-server ./ -p 6854",
+    "test:int": "http-server ./ -p 2467",
     "build": "npm run clean && tsup --config tsup.config.ts && npm run types",
     "types": "tsc -p tsconfig.build-types.json",
     "build:rollup": "rollup -c",
