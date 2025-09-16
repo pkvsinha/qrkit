@@ -29,9 +29,9 @@ export default [
   {
     input: "src/index.ts",
     output: {
-      file: "dist/umd/symbol-codec.umd.min.js",
+      file: "dist/umd/symbol-codec.min.js",
       format: "umd",
-      name: "SymbolCodec",
+      name: "SymbolCodec", // window.SymbolCodec
       sourcemap: true,
       exports: "named",
     },

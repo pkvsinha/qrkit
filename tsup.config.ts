@@ -40,21 +40,4 @@ export default defineConfig([
       (o as any).sourcesContent = true;
     },
   },
-  // IIFE for CDN (single file, minified, window.SymbolCodec)
-  {
-    entry: { "symbol-codec": "src/index.ts" },
-    format: ["iife"],
-    outDir: "dist/umd",
-    dts: false,
-    sourcemap: true,
-    clean: false,
-    splitting: false,
-    shims: false,
-    target: "es2018",
-    minify: true,
-    globalName: "SymbolCodec",
-    esbuildOptions(o) {
-      (o as any).sourcesContent = true;
-    },
-  },
 ]);
