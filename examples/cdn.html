@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>@pkvsinha/symbol-codec CDN demo</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      #qr {
+        margin-top: 1rem;
+        border: 1px solid #ccc;
+      }
+      input,
+      button {
+        padding: 0.5rem;
+        font-size: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>@pkvsinha/symbol-codec CDN demo</h1>
+
+    <label>
+      Payload:
+      <input id="payload" type="text" value="HELLO WORLD" size="40" />
+    </label>
+    <button id="generate">Generate QR</button>
+
+    <canvas id="qr" width="256" height="256"></canvas>
+
+    <!-- Local build (before publish) -->
+    <script src="../dist/umd/symbol-codec.min.js"></script>
+
+    <!-- CDN (after publish) -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@pkvsinha/symbol-codec@0.0.1/dist/umd/symbol-codec.global.js"></script> -->
+    <!-- <script src="https://unpkg.com/@pkvsinha/symbol-codec@0.0.1/dist/umd/symbol-codec.global.js"></script> -->
+
+    <script>
+      const { encodeJS, renderCanvas } = window.SymbolCodec;
+
+      const canvas = document.getElementById("qr");
+      const input = document.getElementById("payload");
+      const btn = document.getElementById("generate");
+
+      function draw() {
+        const { grid } = encodeJS(input.value, { ecc: "M", version: "auto" });
+        renderCanvas(canvas, grid, 8, 4); // scale=8, margin=4
+      }
+
+      btn.addEventListener("click", draw);
+
+      // initial render
+      draw();
+    </script>
+  </body>
+</html>
